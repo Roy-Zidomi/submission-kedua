@@ -60,7 +60,7 @@ class App {
   }
 
   _handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
+    if (confirm('Apakah Anda yakin ingin keluar?')) {
       removeToken();
       removeUser();
       window.location.hash = '#/login';

@@ -23,15 +23,20 @@ class CreatePage {
           <div class="form-section">
             <h3 class="form-section-title">Story Image</h3>
             
-            <div class="image-upload-area" id="uploadArea">
-              <p>Drag and drop an image here, or click to browse</p>
-              <input 
-                type="file" 
-                id="photoInput" 
-                accept="image/*" 
-                style="display: none;"
-                aria-label="Upload story image"
-              >
+            <div class="form-group">
+              <label for="photoInput" class="form-label">Choose Image File</label>
+              <div class="image-upload-area" id="uploadArea">
+                <p>Drag and drop an image here, or click to browse</p>
+                <input 
+                  type="file" 
+                  id="photoInput" 
+                  name="photo"
+                  accept="image/*" 
+                  class="file-input"
+                  aria-label="Upload story image"
+                  aria-describedby="photo-error"
+                >
+              </div>
             </div>
 
             <div class="camera-controls">
@@ -39,10 +44,10 @@ class CreatePage {
                 Buka Kamera
               </button>
               <button type="button" id="captureBtn" class="btn hidden">
-                Ambil Foto
+                Ambil Poto
               </button>
               <button type="button" id="closeCameraBtn" class="btn btn-outline hidden">
-                Tutup Camera
+                Tutup Kamera
               </button>
             </div>
 
@@ -114,7 +119,7 @@ class CreatePage {
       maxZoom: CONFIG.MAX_ZOOM,
     }).addTo(this.map);
 
-    //Click untuk mendapatkan lokasi
+    //Klik peta untuk memilih lokasi
     this.map.on('click', (e) => {
       this._setLocation(e.latlng);
     });
@@ -123,17 +128,17 @@ class CreatePage {
   _setLocation(latlng) {
     this.selectedLocation = latlng;
 
-    //Hapus marker lama
+    // Hapus marker yang sudah ada
     if (this.locationMarker) {
       this.map.removeLayer(this.locationMarker);
     }
-    //Tambahkank marker baru
+    //Tambahkan marker baru
     this.locationMarker = L.marker([latlng.lat, latlng.lng])
       .addTo(this.map)
       .bindPopup('Story location')
       .openPopup();
 
-    // Perbarui tampilan koordinat
+    //Perbarui tampilan
     document.getElementById('coordinatesDisplay').classList.remove('hidden');
     document.getElementById('selectedLat').textContent = latlng.lat.toFixed(6);
     document.getElementById('selectedLon').textContent = latlng.lng.toFixed(6);
@@ -146,8 +151,7 @@ class CreatePage {
     const form = document.getElementById('createForm');
     const cancelBtn = document.getElementById('cancelBtn');
 
-    // File upload
-    uploadArea.addEventListener('click', () => photoInput.click());
+    // File upload - input change
     photoInput.addEventListener('change', (e) => this._handleFileSelect(e));
 
     // Drag and drop
@@ -175,7 +179,7 @@ class CreatePage {
     document.getElementById('captureBtn').addEventListener('click', () => this._capturePhoto());
     document.getElementById('closeCameraBtn').addEventListener('click', () => this._closeCamera());
 
-    // Hapus gambar
+    // Remove image
     document.getElementById('removeImageBtn').addEventListener('click', () => this._removeImage());
 
     // Form submission
@@ -186,7 +190,7 @@ class CreatePage {
 
     // Cancel button
     cancelBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to cancel? All changes will be lost.')) {
+      if (confirm('Yakin ingin membatalkan? Semua perubahan akan hilang.')) {
         this._closeCamera();
         window.location.hash = '#/home';
       }
@@ -222,7 +226,7 @@ class CreatePage {
 
   async _openCamera() {
     try {
-      console.log('Opening camera...');
+      console.log('Membuka Kamera...');
       
       // Request camera access
       this.stream = await navigator.mediaDevices.getUserMedia({ 
@@ -256,9 +260,9 @@ class CreatePage {
       
       let errorMessage = 'Unable to access camera. ';
       if (error.name === 'NotAllowedError') {
-        errorMessage += 'Please allow camera access in your browser settings.';
+        errorMessage += 'Harap izinkan akses kamera di pengaturan browser Anda.';
       } else if (error.name === 'NotFoundError') {
-        errorMessage += 'No camera found on this device.';
+        errorMessage += 'Tidak ada kamera yang ditemukan pada perangkat ini.';
       } else {
         errorMessage += error.message;
       }
@@ -268,20 +272,18 @@ class CreatePage {
   }
 
   _capturePhoto() {
-    console.log('Capturing photo...');
+    console.log('Mengambil Poto.');
     
     const video = document.getElementById('cameraPreview');
     const canvas = document.createElement('canvas');
-
-    //Atur ukuran kanvas ke dimensi video
+    //Atur ukuran kanvas sesuai dimensi video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     //Gambar bingkai video ke kanvas
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    //Ubah menjadi blob dan buat file
+    //Ubah kanvas menjadi blob dan buat file
     canvas.toBlob((blob) => {
       const timestamp = new Date().getTime();
       const file = new File([blob], `camera-photo-${timestamp}.jpg`, { type: 'image/jpeg' });
@@ -289,15 +291,14 @@ class CreatePage {
       this._displayImage(file);
       this._closeCamera();
       
-      console.log('Photo captured successfully');
-      showAlert('Photo captured! You can now add description and location.', 'success');
+      console.log('Foto berhasil diambilPhoto captured successfully');
+      showAlert('Foto diambil! Sekarang kamu dapat menambahkan deskripsi dan lokasi', 'success');
     }, 'image/jpeg', 0.95);
   }
 
   _closeCamera() {
-    console.log('Closing camera...');
-    
-    // Stop all video tracks
+    console.log(' Menutup Kamera...');
+    //Hentikan semua track video
     if (this.stream) {
       this.stream.getTracks().forEach(track => {
         track.stop();
@@ -325,7 +326,7 @@ class CreatePage {
       uploadArea.style.display = 'block';
     }
 
-    console.log('Camera closed');
+    console.log('Camera ditutup');
   }
 
   async _handleSubmit() {
