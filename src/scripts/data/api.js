@@ -1,5 +1,6 @@
 import CONFIG from "../utils/config.js";
 import { getToken } from "../utils/index.js";
+import { saveOfflineStory } from "../utils/idb.js";
 
 class ApiService {
   constructor() {
@@ -78,6 +79,7 @@ class ApiService {
   async createStory(formData) {
     try {
       const token = getToken();
+
       const response = await fetch(`${this.baseUrl}/stories`, {
         method: "POST",
         headers: {
@@ -94,7 +96,25 @@ class ApiService {
 
       return data;
     } catch (error) {
-      throw error;
+      console.warn(
+        "⚠️ Tidak bisa fetch API. Menyimpan cerita ke offline DB...",
+        error
+      );
+
+      // Extract data manual dari formData
+      const offlineStory = {
+        description: formData.get("description"),
+        photo: formData.get("photo"),
+        createdAt: new Date().toISOString(),
+      };
+
+      // Simpan ke IndexedDB
+      await saveOfflineStory(offlineStory);
+
+      return {
+        message: "Story disimpan offline. Akan dikirim saat online.",
+        offline: true,
+      };
     }
   }
 }

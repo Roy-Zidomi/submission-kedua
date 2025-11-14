@@ -3,8 +3,8 @@ import UrlParser from "../routes/url-parser.js";
 import { transitionView } from "../utils/view-transition.js";
 import { isAuthenticated, removeToken, removeUser } from "../utils/index.js";
 import { initNotificationToggle } from "../index.js";
-import { idbAddStory } from '../utils/idb.js';
-import { syncOfflineStories } from '../utils/sync.js';
+import { idbAddStory } from "../utils/idb.js";
+import { syncOfflineStories } from "../utils/idb-sync.js";
 
 class App {
   constructor() {
@@ -134,7 +134,6 @@ class App {
   }
 }
 
-
 async function onSubmitForm() {
   const payload = {
     description: this._description.value,
@@ -144,21 +143,21 @@ async function onSubmitForm() {
   if (!navigator.onLine) {
     // Jika offline, simpan ke IndexedDB
     await idbAddStory(payload);
-    alert('Data disimpan offline. Akan dikirim saat online.');
+    alert("Data disimpan offline. Akan dikirim saat online.");
     return;
   }
 
   // Jika online, kirim langsung ke API
   await fetch(`${Config.BASE_URL}/stories`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify(payload),
   });
 
-  alert('Story berhasil dibuat!');
+  alert("Story berhasil dibuat!");
 }
 
 console.log("Starting Story App...");
@@ -166,4 +165,10 @@ const app = new App();
 
 window.addEventListener("hashchange", () => app.renderPage());
 window.addEventListener("load", () => app.renderPage());
+
+window.addEventListener("online", async () => {
+  console.log("🌐 Kembali online, menyinkronkan data...");
+  await syncOfflineStories();
+});
+
 export default app;

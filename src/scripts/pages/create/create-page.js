@@ -107,41 +107,110 @@ class CreatePage {
   }
 
   async afterRender() {
+    // Tunggu hingga Leaflet tersedia
+    await this._waitForLeaflet();
     this._initMap();
     this._setupEventListeners();
   }
 
-  _initMap() {
-    this.map = L.map("locationMap").setView(
-      CONFIG.DEFAULT_CENTER,
-      CONFIG.DEFAULT_ZOOM
-    );
+  // Method baru untuk memastikan Leaflet sudah loaded
+  async _waitForLeaflet() {
+    return new Promise((resolve) => {
+      // Cek apakah Leaflet sudah tersedia
+      if (typeof L !== "undefined" && L.map) {
+        console.log("Leaflet sudah tersedia");
+        resolve();
+        return;
+      }
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap contributors",
-      maxZoom: CONFIG.MAX_ZOOM,
-    }).addTo(this.map);
+      console.log("Menunggu Leaflet dimuat...");
 
-    //Klik peta untuk memilih lokasi
-    this.map.on("click", (e) => {
-      this._setLocation(e.latlng);
+      // Jika belum, tunggu dengan interval checking
+      const checkInterval = setInterval(() => {
+        if (typeof L !== "undefined" && L.map) {
+          console.log("Leaflet berhasil dimuat");
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50); // Cek setiap 50ms
+
+      // Timeout setelah 10 detik
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error("Leaflet gagal dimuat setelah 10 detik");
+        showAlert(
+          "Map library failed to load. Please refresh the page.",
+          "error"
+        );
+        resolve();
+      }, 10000);
     });
   }
 
+  _initMap() {
+    try {
+      // Pastikan elemen map ada
+      const mapElement = document.getElementById("locationMap");
+      if (!mapElement) {
+        console.error("Element locationMap tidak ditemukan");
+        return;
+      }
+
+      // Pastikan Leaflet tersedia
+      if (typeof L === "undefined") {
+        console.error("Leaflet belum dimuat");
+        showAlert("Map library not loaded. Please refresh the page.", "error");
+        return;
+      }
+
+      // Inisialisasi map dengan koordinat default yang valid
+      const defaultCenter = CONFIG.DEFAULT_CENTER || [-6.2, 106.816666];
+      const defaultZoom = CONFIG.DEFAULT_ZOOM || 5;
+
+      this.map = L.map("locationMap").setView(defaultCenter, defaultZoom);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: CONFIG.MAX_ZOOM || 19,
+      }).addTo(this.map);
+
+      // Klik peta untuk memilih lokasi
+      this.map.on("click", (e) => {
+        this._setLocation(e.latlng);
+      });
+
+      console.log("Map berhasil diinisialisasi");
+    } catch (error) {
+      console.error("Error saat inisialisasi map:", error);
+      showAlert("Failed to initialize map. Please refresh the page.", "error");
+    }
+  }
+
   _setLocation(latlng) {
+    // Validasi latlng
+    if (
+      !latlng ||
+      typeof latlng.lat === "undefined" ||
+      typeof latlng.lng === "undefined"
+    ) {
+      console.error("Invalid latlng:", latlng);
+      return;
+    }
+
     this.selectedLocation = latlng;
 
     // Hapus marker yang sudah ada
     if (this.locationMarker) {
       this.map.removeLayer(this.locationMarker);
     }
-    //Tambahkan marker baru
+
+    // Tambahkan marker baru
     this.locationMarker = L.marker([latlng.lat, latlng.lng])
       .addTo(this.map)
       .bindPopup("Story location")
       .openPopup();
 
-    //Perbarui tampilan
+    // Perbarui tampilan
     document.getElementById("coordinatesDisplay").classList.remove("hidden");
     document.getElementById("selectedLat").textContent = latlng.lat.toFixed(6);
     document.getElementById("selectedLon").textContent = latlng.lng.toFixed(6);
@@ -389,13 +458,27 @@ class CreatePage {
     formData.append("lat", this.selectedLocation.lat);
     formData.append("lon", this.selectedLocation.lng);
 
+    // Jika offline, simpan data ke IndexedDB
+    if (!navigator.onLine) {
+      await idbAddStory({ formData });
+      showAlert("Data disimpan offline, akan disinkronkan saat online.");
+      return; // Menghentikan pengiriman ke API saat offline
+    }
+
+    // Jika online, kirim langsung ke API
     try {
       showLoading();
-      await ApiService.createStory(formData);
+      const response = await ApiService.createStory(formData);
+
+      if (response.ok) {
+        showAlert("Story published successfully!", "success");
+      } else {
+        throw new Error("Failed to publish story");
+      }
 
       this._closeCamera();
-      showAlert("Story published successfully!", "success");
 
+      // Kembali ke home setelah publish
       setTimeout(() => {
         window.location.hash = "#/home";
       }, 1500);

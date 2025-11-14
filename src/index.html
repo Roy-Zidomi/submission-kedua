@@ -24,6 +24,13 @@
     <link rel="icon" href="/icons/dicoding192x192.png" type="image/png" />
 
     <meta name="theme-color" content="#2196f3" />
+
+    <!-- CRITICAL: Load Leaflet JS di HEAD agar tersedia sebelum app bundle -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
   </head>
 
   <body>
@@ -60,15 +67,15 @@
       <div class="spinner"></div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script>
-
     <!-- REGISTER SERVICE WORKER + INSTALL LOGIC -->
     <script>
+      // Verify Leaflet loaded
+      if (typeof L === 'undefined') {
+        console.error('❌ Leaflet failed to load!');
+      } else {
+        console.log('✅ Leaflet loaded successfully');
+      }
+
       // Register SW
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -97,4 +104,4 @@
       });
     </script>
   </body>
-</html>
+</html> 
