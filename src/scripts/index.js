@@ -1,6 +1,7 @@
 import './pages/app.js';
 import NotificationHelper from './utils/notification-helper.js';
 import { getToken, isAuthenticated } from './utils/index.js';
+import { syncOfflineStories } from './utils/sync.js';
 
 export async function initNotificationToggle() {
   const toggleBtn = document.getElementById('toggleNotification');
@@ -88,4 +89,9 @@ export async function initNotificationToggle() {
 window.addEventListener('load', () => {
   console.log('[index.js] Page loaded, initializing notification toggle...');
   initNotificationToggle();
+});
+
+window.addEventListener('online', () => {
+  console.log('Back online! Syncing offline data...');
+  syncOfflineStories();
 });

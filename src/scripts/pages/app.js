@@ -3,6 +3,8 @@ import UrlParser from "../routes/url-parser.js";
 import { transitionView } from "../utils/view-transition.js";
 import { isAuthenticated, removeToken, removeUser } from "../utils/index.js";
 import { initNotificationToggle } from "../index.js";
+import { idbAddStory } from '../utils/idb.js';
+import { syncOfflineStories } from '../utils/sync.js';
 
 class App {
   constructor() {
@@ -130,6 +132,33 @@ class App {
       }, 200);
     });
   }
+}
+
+
+async function onSubmitForm() {
+  const payload = {
+    description: this._description.value,
+    createdAt: Date.now(),
+  };
+
+  if (!navigator.onLine) {
+    // Jika offline, simpan ke IndexedDB
+    await idbAddStory(payload);
+    alert('Data disimpan offline. Akan dikirim saat online.');
+    return;
+  }
+
+  // Jika online, kirim langsung ke API
+  await fetch(`${Config.BASE_URL}/stories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  alert('Story berhasil dibuat!');
 }
 
 console.log("Starting Story App...");
