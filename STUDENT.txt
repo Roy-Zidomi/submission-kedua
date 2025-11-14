@@ -1,2 +1,46 @@
 APP_URL=<url_aplikasi>
 MAP_SERVICE_API_KEY=<api_key>
+
+
+📦 project-root
+├── dist
+├── node_modules
+├── src
+│   ├── public
+│   │   ├── icons
+│   │   │   ├── dicoding192x192.png
+│   │   │   └── dicoding512x512.png
+│   │   └── manifest.json
+│   ├── scripts
+│   │   ├── data
+│   │   │   └── api.js
+│   │   ├── pages
+│   │   │   ├── auth
+│   │   │   │   ├── login-page.js
+│   │   │   │   └── register-page.js
+│   │   │   ├── create
+│   │   │   │   └── create-page.js
+│   │   │   └── home
+│   │   │       └── app.js
+│   │   ├── routes
+│   │   │   ├── routes.js
+│   │   │   └── url-parser.js
+│   │   ├── utils
+│   │   │   ├── config.js
+│   │   │   ├── index.js
+│   │   │   ├── notification-helper.js
+│   │   │   └── view-transition.js
+│   │   └── sw.js
+│   └── styles
+│   |    ├── styles.css
+│   |── index.html
+├── .babelrc
+├── .gitignore
+├── package-lock.json
+├── package.json
+├── README.md
+├── STUDENT.txt
+├── webpack.common.js
+├── webpack.config.js
+├── webpack.dev.js
+└── webpack.prod.js

@@ -1,10 +1,12 @@
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { InjectManifest } = require('workbox-webpack-plugin');
 
 module.exports = merge(common, {
   mode: 'production',
   devtool: 'source-map',
+
   module: {
     rules: [
       {
@@ -13,11 +15,19 @@ module.exports = merge(common, {
       },
     ],
   },
+
   plugins: [
     new MiniCssExtractPlugin({
       filename: '[name].[contenthash].css',
     }),
+
+    // ⭐ Workbox InjectManifest → INI YANG MEMBUAT OFFLINE BERHASIL
+    new InjectManifest({
+      swSrc: './src/scripts/sw.js', // lokasi sw.js asli (custom)
+      swDest: 'sw.js',              // output ke folder dist (WAJIB)
+    }),
   ],
+
   optimization: {
     splitChunks: {
       chunks: 'all',
@@ -40,6 +50,7 @@ module.exports = merge(common, {
       },
     },
   },
+
   performance: {
     maxEntrypointSize: 512000,
     maxAssetSize: 512000,

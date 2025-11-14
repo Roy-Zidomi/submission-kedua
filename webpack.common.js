@@ -1,17 +1,19 @@
-const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const path = require("path");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const CopyWebpackPlugin = require("copy-webpack-plugin");
 
 module.exports = {
   entry: {
     app: [
-      path.resolve(__dirname, 'src/styles/styles.css'),
-      path.resolve(__dirname, 'src/scripts/pages/app.js'),
+      path.resolve(__dirname, "src/styles/styles.css"),
+      path.resolve(__dirname, "src/scripts/index.js"),
     ],
   },
   output: {
-    filename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'dist'),
+    filename: (pathData) => {
+      return pathData.chunk.name === "sw" ? "[name].js" : "[name].bundle.js";
+    },
+    path: path.resolve(__dirname, "dist"),
     clean: true,
   },
   module: {
@@ -20,40 +22,42 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: 'babel-loader',
+          loader: "babel-loader",
           options: {
-            presets: ['@babel/preset-env'],
+            presets: ["@babel/preset-env"],
           },
         },
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"],
       },
       {
         test: /\.(png|svg|jpg|jpeg|gif|ico)$/i,
-        type: 'asset/resource',
+        type: "asset/resource",
         generator: {
-          filename: 'images/[name][ext]',
+          filename: "images/[name][ext]",
         },
       },
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      filename: 'index.html',
-      template: path.resolve(__dirname, 'src/index.html'),
+      filename: "index.html",
+      template: path.resolve(__dirname, "src/index.html"),
+      excludeChunks: ["sw"],
       minify: {
         collapseWhitespace: true,
         removeComments: true,
         removeRedundantAttributes: true,
       },
     }),
+
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'src/public/'),
-          to: path.resolve(__dirname, 'dist/'),
+          from: path.resolve(__dirname, "src/public"),
+          to: path.resolve(__dirname, "dist"),
           noErrorOnMissing: true,
         },
       ],

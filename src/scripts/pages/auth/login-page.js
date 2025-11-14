@@ -1,6 +1,5 @@
 import ApiService from '../../data/api.js';
 import { 
-  setToken, 
   setUser, 
   validateEmail, 
   validatePassword,
@@ -111,27 +110,43 @@ class LoginPage {
     const isEmailValid = this._validateEmailField(emailInput);
     const isPasswordValid = this._validatePasswordField(passwordInput);
 
-    if (!isEmailValid || !isPasswordValid) {
-      return;
-    }
+    if (!isEmailValid || !isPasswordValid) return;
 
-    const email = emailInput.value;
-    const password = passwordInput.value;
+    const email = emailInput.value.trim();
+    const password = passwordInput.value.trim();
 
     try {
       showLoading();
       const response = await ApiService.login(email, password);
 
-      setToken(response.loginResult.token);
+      console.log('[LoginPage] Response dari API:', response);
+
+      const token = response?.loginResult?.token;
+      if (!token) {
+        console.error('[LoginPage] Token tidak ditemukan di response:', response);
+        hideLoading();
+        showAlert('Login gagal: server tidak mengembalikan token.', 'error');
+        return;
+      }
+
+      // ✅ Simpan token secara langsung ke localStorage
+      localStorage.setItem('token', token);
+      console.log('[LoginPage] Token disimpan ke localStorage:', token);
+
+      // Simpan user info
       setUser({
-        userId: response.loginResult.userId,
-        name: response.loginResult.name,
+        userId: response?.loginResult?.userId,
+        name: response?.loginResult?.name,
       });
 
-      showAlert('Login successful!', 'success');
+      hideLoading();
+      showAlert('✅ Login successful!', 'success');
+
+      // Redirect ke halaman utama
       window.location.hash = '#/home';
     } catch (error) {
       hideLoading();
+      console.error('[LoginPage] Error saat login:', error);
       showAlert(error.message || 'Login failed. Please try again.', 'error');
     } finally {
       hideLoading();

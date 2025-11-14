@@ -14,9 +14,7 @@ class HomePage {
     return `
       <div class="home-header">
         <h2 class="page-title">Story Map</h2>
-        <a href="#/create" class="btn-create">
-          Add Story
-        </a>
+        <a href="#/create" class="btn-create">Add Story</a>
       </div>
 
       <div class="filter-section">
@@ -31,15 +29,12 @@ class HomePage {
         <div class="map-container">
           <div id="map" role="application" aria-label="Interactive map showing story locations"></div>
         </div>
-        <div class="stories-list" id="storiesList" role="list">
-          <!-- Stories will be rendered here -->
-        </div>
+        <div class="stories-list" id="storiesList" role="list"></div>
       </div>
     `;
   }
 
   async afterRender() {
-    // Wait for Leaflet to load
     if (typeof L === 'undefined') {
       console.error('Leaflet is not loaded!');
       showAlert('Map library failed to load. Please refresh the page.', 'error');
@@ -52,59 +47,78 @@ class HomePage {
   }
 
   _initMap() {
-    try {
-      // Check if map container exists
-      const mapContainer = document.getElementById('map');
-      if (!mapContainer) {
-        console.error('Map container not found!');
-        return;
-      }
+  try {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) {
+      console.error('Map container not found!');
+      return;
+    }
 
-      // Initialize map
-      this.map = L.map('map').setView(CONFIG.DEFAULT_CENTER, CONFIG.DEFAULT_ZOOM);
+    // 🔹 Gunakan fallback jika CONFIG.DEFAULT_CENTER tidak valid
+    const defaultCenter = Array.isArray(CONFIG.DEFAULT_CENTER) && CONFIG.DEFAULT_CENTER.length === 2
+      ? CONFIG.DEFAULT_CENTER
+      : [-6.2, 106.816666]; // Jakarta sebagai default
 
-      // Add tile layers with layer control
-      const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: CONFIG.MAX_ZOOM,
-      });
+    const defaultZoom = CONFIG.DEFAULT_ZOOM || 5;
 
-      const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    this.map = L.map('map').setView(defaultCenter, defaultZoom);
+
+    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: CONFIG.MAX_ZOOM || 19,
+    });
+
+    const satelliteLayer = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
         attribution: '&copy; Esri',
-        maxZoom: CONFIG.MAX_ZOOM,
-      });
+        maxZoom: CONFIG.MAX_ZOOM || 19,
+      }
+    );
 
-      osmLayer.addTo(this.map);
-
-      const baseMaps = {
-        'Street Map': osmLayer,
-        'Satellite': satelliteLayer,
-      };
-
-      L.control.layers(baseMaps).addTo(this.map);
-      
-      console.log('Map initialized successfully');
-    } catch (error) {
-      console.error('Error initializing map:', error);
-      showAlert('Failed to initialize map', 'error');
-    }
+    osmLayer.addTo(this.map);
+    L.control.layers({ 'Street Map': osmLayer, Satellite: satelliteLayer }).addTo(this.map);
+    console.log('✅ Map initialized successfully');
+  } catch (error) {
+    console.error('❌ Error initializing map:', error);
+    showAlert('Failed to initialize map', 'error');
   }
+}
 
-  async _loadStories() {
-    try {
-      showLoading();
-      const response = await ApiService.getStories(1);
-      this.stories = response.listStory || [];
-      
-      this._renderStories();
-      this._addMarkersToMap();
-      
-      hideLoading();
-    } catch (error) {
-      hideLoading();
-      showAlert(error.message || 'Failed to load stories', 'error');
+async _loadStories() {
+  try {
+    showLoading();
+    const response = await ApiService.getStories(1);
+    this.stories = response.listStory || [];
+
+    // 🔹 Filter story yang punya koordinat valid
+    const validStories = this.stories.filter(
+      (s) => typeof s.lat === 'number' && typeof s.lon === 'number'
+    );
+
+    if (validStories.length === 0) {
+      console.warn('[Map] Tidak ada story dengan lokasi, gunakan posisi default');
+      this.map.setView([-6.2, 106.816666], 10);
+    } else {
+      // 🔹 Pastikan setView() hanya pakai koordinat valid
+      const { lat, lon } = validStories[0];
+      if (!isNaN(lat) && !isNaN(lon)) {
+        this.map.setView([lat, lon], 10);
+      } else {
+        console.warn('[Map] Koordinat tidak valid, fallback ke Jakarta');
+        this.map.setView([-6.2, 106.816666], 10);
+      }
     }
+
+    this._renderStories();
+    this._addMarkersToMap();
+    hideLoading();
+  } catch (error) {
+    hideLoading();
+    showAlert(error.message || 'Failed to load stories', 'error');
   }
+}
+
 
   _renderStories(filteredStories = null) {
     const storiesList = document.getElementById('storiesList');
@@ -137,13 +151,12 @@ class HomePage {
             <span class="story-meta-item">${formatDate(story.createdAt)}</span>
             ${story.lat && story.lon ? `
               <span class="story-meta-item">${story.lat.toFixed(4)}, ${story.lon.toFixed(4)}</span>
-            ` : ''}
+            ` : '<span class="story-meta-item text-gray-500">No location data</span>'}
           </div>
         </div>
       </article>
     `).join('');
 
-    // Add click and keyboard event listeners
     document.querySelectorAll('.story-card').forEach(card => {
       card.addEventListener('click', () => this._handleStoryClick(card));
       card.addEventListener('keypress', (e) => {
@@ -162,7 +175,6 @@ class HomePage {
   }
 
   _addMarkersToMap() {
-    // Clear existing markers
     this.markers.forEach(marker => this.map.removeLayer(marker));
     this.markers = [];
 
@@ -175,7 +187,7 @@ class HomePage {
             <div style="min-width: 200px;">
               <img src="${story.photoUrl}" alt="${story.name}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 4px; margin-bottom: 8px;">
               <h4 style="margin: 0 0 8px 0; font-size: 1rem;">${story.name}</h4>
-              <p style="margin: 0; font-size: 0.875rem; color: #64748b;">${story.description.substring(0, 100)}${story.description.length > 100 ? '...' : ''}</p>
+              <p style="margin: 0; font-size: 0.875rem; color: #64748b;">${(story.description || '').substring(0, 100)}${story.description?.length > 100 ? '...' : ''}</p>
             </div>
           `)
           .addTo(this.map);
@@ -193,7 +205,6 @@ class HomePage {
       }
     });
 
-    // Fit map to show all markers
     if (bounds.length > 0) {
       this.map.fitBounds(bounds, { padding: [50, 50] });
     }
@@ -202,30 +213,23 @@ class HomePage {
   _handleStoryClick(card) {
     const storyId = card.dataset.storyId;
     const index = parseInt(card.dataset.index);
-    
+
     this._highlightStory(storyId);
-    
+
     const story = this.stories[index];
     if (story.lat && story.lon) {
       this.map.setView([story.lat, story.lon], 15);
-      
       const marker = this.markers.find(m => m.storyId === storyId);
-      if (marker) {
-        marker.openPopup();
-      }
+      if (marker) marker.openPopup();
+    } else {
+      showAlert('This story has no location data', 'info');
     }
   }
 
   _highlightStory(storyId) {
-    document.querySelectorAll('.story-card').forEach(card => {
-      card.classList.remove('active');
-    });
-    
+    document.querySelectorAll('.story-card').forEach(card => card.classList.remove('active'));
     const activeCard = document.querySelector(`[data-story-id="${storyId}"]`);
-    if (activeCard) {
-      activeCard.classList.add('active');
-    }
-
+    if (activeCard) activeCard.classList.add('active');
     this.activeMarkerId = storyId;
   }
 
@@ -239,12 +243,10 @@ class HomePage {
 
   _setupEventListeners() {
     const filterSelect = document.getElementById('locationFilter');
-    
     filterSelect.addEventListener('change', (e) => {
       const filterValue = e.target.value;
-      
       if (filterValue === 'with-location') {
-        const filtered = this.stories.filter(story => story.lat && story.lon);
+        const filtered = this.stories.filter(s => s.lat && s.lon);
         this._renderStories(filtered);
       } else {
         this._renderStories();

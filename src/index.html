@@ -1,44 +1,100 @@
 <!DOCTYPE html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Story App - Bagikan cerita Anda dengan lokasi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Story App - Bagikan cerita Anda dengan lokasi"
+    />
     <title>Story App</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin=""/>
-</head>
-<body>
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Icon PWA -->
+    <link rel="icon" href="/icons/dicoding192x192.png" type="image/png" />
+
+    <meta name="theme-color" content="#2196f3" />
+  </head>
+
+  <body>
     <a href="#main-content" class="skip-link">Skip to content</a>
-    
+
     <header class="app-header">
-        <div class="container">
-            <h1 class="app-
-            o">Story App</h1>
-            <nav class="app-nav" id="mainNav">
-            </nav>
-        </div>
+      <div class="container">
+        <h1 class="app-logo">Story App</h1>
+        <nav class="app-nav" id="mainNav">
+          <button id="toggleNotification" class="btn-notification hidden">
+            🔔 Enable Notification
+          </button>
+
+          <button id="installApp" class="btn-install hidden">
+            Install App
+          </button>
+        </nav>
+      </div>
     </header>
 
     <main id="main-content" class="app-main">
-        <div id="app-content" class="container">
-            <!-- Content will be rendered here -->
-        </div>
+      <div id="app-content" class="container">
+        <!-- Content will be rendered here -->
+      </div>
     </main>
 
     <footer class="app-footer">
-        <div class="container">
-            <p>&copy; 2025 Story App.</p>
-        </div>
+      <div class="container">
+        <p>&copy; 2025 Story App.</p>
+      </div>
     </footer>
 
     <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="spinner"></div>
+      <div class="spinner"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
-</body>
+    <!-- Leaflet JS -->
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+
+    <!-- REGISTER SERVICE WORKER + INSTALL LOGIC -->
+    <script>
+      // Register SW
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then(() => console.log("Service Worker Registered"))
+            .catch((err) => console.error("SW registration failed:", err));
+        });
+      }
+
+      // Install App logic
+      let deferredPrompt;
+      const installBtn = document.getElementById("installApp");
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installBtn.classList.remove("hidden");
+      });
+
+      installBtn.addEventListener("click", async () => {
+        installBtn.classList.add("hidden");
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+      });
+    </script>
+  </body>
 </html>

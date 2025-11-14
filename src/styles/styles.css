@@ -417,6 +417,52 @@ body {
     gap: 0.25rem;
 }
 
+/* button toggle */
+.btn-notification {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.btn-notification:hover {
+  background-color: #1e40af;
+  transform: scale(1.05);
+}
+
+.btn-notification:active {
+  transform: scale(0.95);
+}
+
+.btn-notification.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.hidden {
+  display: none !important;
+}
+.btn-install {
+  margin-left: 8px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-install:hover {
+  background-color: #1976d2;
+}
+
+
+
 /* Create Page */
 .create-container {
     max-width: 800px;
