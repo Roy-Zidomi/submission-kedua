@@ -22,10 +22,10 @@ const NotificationHelper = {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
       await navigator.serviceWorker.ready;
-      console.log('✅ Service Worker registered successfully:', registration);
+      console.log('Service Worker registered successfully:', registration);
       return registration;
     } catch (err) {
-      console.error('❌ Failed to register service worker:', err);
+      console.error('Failed to register service worker:', err);
       return null;
     }
   },
@@ -52,7 +52,7 @@ const NotificationHelper = {
 
     if (!token || token.length < 10) {
       console.error('[NotificationHelper] Missing or invalid token');
-      alert('⚠️ Token login tidak valid. Silakan login ulang.');
+      alert('Token login tidak valid. Silakan login ulang.');
       return null;
     }
 
@@ -80,7 +80,7 @@ const NotificationHelper = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // ✅ perbaikan utama
+          'Authorization': `Bearer ${token}`, 
         },
         body: JSON.stringify(payload),
       });
@@ -90,7 +90,7 @@ const NotificationHelper = {
       if (!response.ok) {
         if (response.status === 401) {
           console.error('[NotificationHelper] Unauthorized — invalid token');
-          alert('⚠️ Token login tidak valid. Silakan login ulang.');
+          alert('Token login tidak valid. Silakan login ulang.');
           localStorage.removeItem('token');
         } else {
           console.error('[NotificationHelper] Server error:', data.message || response.statusText);
@@ -99,10 +99,10 @@ const NotificationHelper = {
       }
 
       localStorage.setItem('push-subscribed', 'true');
-      console.log('✅ [NotificationHelper] Subscribed and sent to server');
+      console.log('[NotificationHelper] Subscribed and sent to server');
       return subscription;
     } catch (err) {
-      console.error('❌ [NotificationHelper] subscribeUser error:', err);
+      console.error('[NotificationHelper] subscribeUser error:', err);
       localStorage.setItem('push-subscribed', 'false');
       return null;
     }
@@ -116,7 +116,7 @@ const NotificationHelper = {
 
     if (!token || token.length < 10) {
       console.error('[NotificationHelper] Missing or invalid token');
-      alert('⚠️ Token login tidak valid. Silakan login ulang.');
+      alert('Token login tidak valid. Silakan login ulang.');
       return null;
     }
 
@@ -146,10 +146,10 @@ const NotificationHelper = {
       }
 
       localStorage.setItem('push-subscribed', 'false');
-      console.log('✅ [NotificationHelper] Unsubscribed successfully');
+      console.log('[NotificationHelper] Unsubscribed successfully');
       return true;
     } catch (err) {
-      console.error('❌ [NotificationHelper] unsubscribeUser error:', err);
+      console.error('[NotificationHelper] unsubscribeUser error:', err);
       return null;
     }
   },

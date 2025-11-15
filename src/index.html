@@ -16,16 +16,9 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""
     />
-
-    <!-- Manifest PWA -->
     <link rel="manifest" href="/manifest.json" />
-
-    <!-- Icon PWA -->
     <link rel="icon" href="/icons/dicoding192x192.png" type="image/png" />
-
     <meta name="theme-color" content="#2196f3" />
-
-    <!-- CRITICAL: Load Leaflet JS di HEAD agar tersedia sebelum app bundle -->
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
@@ -41,7 +34,7 @@
         <h1 class="app-logo">Story App</h1>
         <nav class="app-nav" id="mainNav">
           <button id="toggleNotification" class="btn-notification hidden">
-            🔔 Enable Notification
+            Enable Notification
           </button>
 
           <button id="installApp" class="btn-install hidden">
@@ -71,9 +64,9 @@
     <script>
       // Verify Leaflet loaded
       if (typeof L === 'undefined') {
-        console.error('❌ Leaflet failed to load!');
+        console.error('Leaflet failed to load!');
       } else {
-        console.log('✅ Leaflet loaded successfully');
+        console.log('Leaflet loaded successfully');
       }
 
       // Register SW

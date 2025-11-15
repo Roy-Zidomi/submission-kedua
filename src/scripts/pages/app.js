@@ -27,7 +27,7 @@ class App {
       toggleBtn = document.createElement("button");
       toggleBtn.id = "toggleNotification";
       toggleBtn.className = "btn-notification hidden";
-      toggleBtn.textContent = "🔔 Enable Notification";
+      toggleBtn.textContent = "Enable Notification";
       nav.appendChild(toggleBtn);
     }
 
@@ -167,7 +167,7 @@ window.addEventListener("hashchange", () => app.renderPage());
 window.addEventListener("load", () => app.renderPage());
 
 window.addEventListener("online", async () => {
-  console.log("🌐 Kembali online, menyinkronkan data...");
+  console.log("Kembali online, menyinkronkan data...");
   await syncOfflineStories();
 });
 

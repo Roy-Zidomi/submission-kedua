@@ -129,7 +129,7 @@ class LoginPage {
         return;
       }
 
-      // ✅ Simpan token secara langsung ke localStorage
+      // Simpan token secara langsung ke localStorage
       localStorage.setItem('token', token);
       console.log('[LoginPage] Token disimpan ke localStorage:', token);
 
@@ -140,7 +140,7 @@ class LoginPage {
       });
 
       hideLoading();
-      showAlert('✅ Login successful!', 'success');
+      showAlert('Login successful!', 'success');
 
       // Redirect ke halaman utama
       window.location.hash = '#/home';

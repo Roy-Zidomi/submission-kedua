@@ -1,6 +1,7 @@
 import ApiService from "../../data/api.js";
 import CONFIG from "../../utils/config.js";
 import { showLoading, hideLoading, showAlert } from "../../utils/index.js";
+import { idbAddStory } from "../../utils/idb.js";
 
 class CreatePage {
   constructor() {
@@ -451,42 +452,75 @@ class CreatePage {
 
     if (!isValid) return;
 
-    // Create FormData
-    const formData = new FormData();
-    formData.append("photo", this.selectedFile);
-    formData.append("description", description);
-    formData.append("lat", this.selectedLocation.lat);
-    formData.append("lon", this.selectedLocation.lng);
+    // Prepare story data
+    const storyData = {
+      photo: this.selectedFile,
+      description: description,
+      lat: this.selectedLocation.lat,
+      lon: this.selectedLocation.lng,
+    };
 
-    // Jika offline, simpan data ke IndexedDB
-    if (!navigator.onLine) {
-      await idbAddStory({ formData });
-      showAlert("Data disimpan offline, akan disinkronkan saat online.");
-      return; // Menghentikan pengiriman ke API saat offline
-    }
-
-    // Jika online, kirim langsung ke API
     try {
       showLoading();
+
+      //CEK STATUS KONEKSI
+      if (!navigator.onLine) {
+        console.log("Offline mode detected, saving to IndexedDB...");
+
+        // Simpan ke IndexedDB
+        await idbAddStory(storyData);
+
+        hideLoading();
+        showAlert(
+          "Anda sedang offline. Story disimpan dan akan otomatis dikirim saat online kembali.",
+          "info"
+        );
+
+        this._closeCamera();
+
+        // Kembali ke home
+        setTimeout(() => {
+          window.location.hash = "#/home";
+        }, 2000);
+
+        return;
+      }
+      console.log("Online mode, sending to API...");
+
+      // Create FormData untuk API
+      const formData = new FormData();
+      formData.append("photo", this.selectedFile);
+      formData.append("description", description);
+      formData.append("lat", this.selectedLocation.lat);
+      formData.append("lon", this.selectedLocation.lng);
+
       const response = await ApiService.createStory(formData);
 
-      if (response.ok) {
-        showAlert("Story published successfully!", "success");
+      hideLoading();
+
+      // Cek apakah response sukses atau offline
+      if (response.offline) {
+        showAlert(
+          "Gagal terhubung ke server. Story disimpan offline dan akan dikirim otomatis saat online.",
+          "warning"
+        );
       } else {
-        throw new Error("Failed to publish story");
+        showAlert("Story berhasil dipublikasikan!", "success");
       }
 
       this._closeCamera();
 
-      // Kembali ke home setelah publish
+      // Kembali ke home
       setTimeout(() => {
         window.location.hash = "#/home";
       }, 1500);
     } catch (error) {
       hideLoading();
-      showAlert(error.message || "Failed to publish story", "error");
-    } finally {
-      hideLoading();
+      console.error("Error submitting story:", error);
+      showAlert(
+        error.message || "Gagal mempublikasikan story. Silakan coba lagi.",
+        "error"
+      );
     }
   }
 }

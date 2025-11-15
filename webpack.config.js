@@ -28,7 +28,7 @@ module.exports = {
       filename: 'index.html',
       template: path.resolve(__dirname, 'src/templates/index.html'),
     }),
-    // ✅ PENTING: Copy Service Worker ke root dist
+    //Copy Service Worker ke root dist
     new CopyWebpackPlugin({
       patterns: [
         {

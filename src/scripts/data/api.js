@@ -1,6 +1,6 @@
 import CONFIG from "../utils/config.js";
 import { getToken } from "../utils/index.js";
-import { saveOfflineStory } from "../utils/idb.js";
+import { idbAddStory } from "../utils/idb.js";
 
 class ApiService {
   constructor() {
@@ -97,24 +97,45 @@ class ApiService {
       return data;
     } catch (error) {
       console.warn(
-        "⚠️ Tidak bisa fetch API. Menyimpan cerita ke offline DB...",
+        "Tidak bisa terhubung ke API. Menyimpan cerita ke offline DB...",
         error
       );
 
-      // Extract data manual dari formData
+      //EXTRACT DATA DARI FORMDATA
+      const photo = formData.get("photo");
+      const description = formData.get("description");
+      const lat = parseFloat(formData.get("lat"));
+      const lon = parseFloat(formData.get("lon"));
+
+      // Validasi data sebelum simpan
+      if (!photo || !description) {
+        throw new Error("Data tidak lengkap untuk disimpan offline");
+      }
+
+      // Prepare data untuk IndexedDB
       const offlineStory = {
-        description: formData.get("description"),
-        photo: formData.get("photo"),
-        createdAt: new Date().toISOString(),
+        photo: photo,  
+        description: description,
+        lat: lat,
+        lon: lon
       };
 
-      // Simpan ke IndexedDB
-      await saveOfflineStory(offlineStory);
+      try {
+        // Simpan ke IndexedDB
+        await idbAddStory(offlineStory);
+        
+        console.log("Story berhasil disimpan ke IndexedDB");
 
-      return {
-        message: "Story disimpan offline. Akan dikirim saat online.",
-        offline: true,
-      };
+        // Return response offline
+        return {
+          error: false,
+          message: "Story disimpan offline. Akan dikirim otomatis saat online.",
+          offline: true,
+        };
+      } catch (idbError) {
+        console.error("Gagal menyimpan ke IndexedDB:", idbError);
+        throw new Error("Gagal menyimpan story (offline maupun online)");
+      }
     }
   }
 }

@@ -54,10 +54,10 @@ class HomePage {
       return;
     }
 
-    // 🔹 Gunakan fallback jika CONFIG.DEFAULT_CENTER tidak valid
+    //Gunakan fallback jika CONFIG.DEFAULT_CENTER tidak valid
     const defaultCenter = Array.isArray(CONFIG.DEFAULT_CENTER) && CONFIG.DEFAULT_CENTER.length === 2
       ? CONFIG.DEFAULT_CENTER
-      : [-6.2, 106.816666]; // Jakarta sebagai default
+      : [-6.2, 106.816666]; // Jakarta 
 
     const defaultZoom = CONFIG.DEFAULT_ZOOM || 5;
 
@@ -78,9 +78,9 @@ class HomePage {
 
     osmLayer.addTo(this.map);
     L.control.layers({ 'Street Map': osmLayer, Satellite: satelliteLayer }).addTo(this.map);
-    console.log('✅ Map initialized successfully');
+    console.log('Map initialized successfully');
   } catch (error) {
-    console.error('❌ Error initializing map:', error);
+    console.error('Error initializing map:', error);
     showAlert('Failed to initialize map', 'error');
   }
 }
@@ -91,7 +91,7 @@ async _loadStories() {
     const response = await ApiService.getStories(1);
     this.stories = response.listStory || [];
 
-    // 🔹 Filter story yang punya koordinat valid
+    //Filter story yang punya koordinat valid
     const validStories = this.stories.filter(
       (s) => typeof s.lat === 'number' && typeof s.lon === 'number'
     );
@@ -100,7 +100,6 @@ async _loadStories() {
       console.warn('[Map] Tidak ada story dengan lokasi, gunakan posisi default');
       this.map.setView([-6.2, 106.816666], 10);
     } else {
-      // 🔹 Pastikan setView() hanya pakai koordinat valid
       const { lat, lon } = validStories[0];
       if (!isNaN(lat) && !isNaN(lon)) {
         this.map.setView([lat, lon], 10);

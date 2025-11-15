@@ -21,10 +21,10 @@ module.exports = merge(common, {
       filename: '[name].[contenthash].css',
     }),
 
-    // ⭐ Workbox InjectManifest → INI YANG MEMBUAT OFFLINE BERHASIL
+    //Workbox InjectManifest 
     new InjectManifest({
-      swSrc: './src/scripts/sw.js', // lokasi sw.js asli (custom)
-      swDest: 'sw.js',              // output ke folder dist (WAJIB)
+      swSrc: './src/scripts/sw.js', 
+      swDest: 'sw.js',              
     }),
   ],
 
